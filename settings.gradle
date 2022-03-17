@@ -1,2 +1,3 @@
 rootProject.name = 'studymoa'
+include 'studymoa-core'
 
