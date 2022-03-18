@@ -46,3 +46,9 @@ subprojects {
         useJUnitPlatform()
     }
 }
+
+project(":studymoa-api") {
+    dependencies {
+        api project(":studymoa-core")
+    }
+}
