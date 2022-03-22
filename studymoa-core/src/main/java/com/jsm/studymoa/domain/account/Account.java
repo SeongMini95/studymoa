@@ -62,4 +62,8 @@ public class Account extends BaseTimeEntity {
     public void completeSignup() {
         this.role = Role.USER;
     }
+
+    public void changePwd(String encodedPwd) {
+        this.pwd = encodedPwd;
+    }
 }

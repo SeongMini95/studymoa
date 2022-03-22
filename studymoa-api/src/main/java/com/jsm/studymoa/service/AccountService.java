@@ -2,10 +2,12 @@ package com.jsm.studymoa.service;
 
 import com.jsm.studymoa.config.exception.AccountCertifyNotFoundException;
 import com.jsm.studymoa.config.exception.AccountDuplicateException;
+import com.jsm.studymoa.config.exception.FindPwdAccountIdNotFoundException;
 import com.jsm.studymoa.domain.account.Account;
 import com.jsm.studymoa.domain.account.repository.AccountRepository;
 import com.jsm.studymoa.domain.accountcertify.AccountCertify;
 import com.jsm.studymoa.domain.accountcertify.repository.AccountCertifyRepository;
+import com.jsm.studymoa.dto.account.request.FindPwdRequestDto;
 import com.jsm.studymoa.dto.account.request.SignUpRequestDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -53,5 +55,11 @@ public class AccountService {
     @Transactional
     public void completeSignup(Account account) {
         account.completeSignup();
+    }
+
+    @Transactional
+    public void findPwd(Long accountId, FindPwdRequestDto findPwdRequestDto) {
+        Account account = accountRepository.findById(accountId).orElseThrow(FindPwdAccountIdNotFoundException::new);
+        account.changePwd(encoder.encode(findPwdRequestDto.getPwd()));
     }
 }
