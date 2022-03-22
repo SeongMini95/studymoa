@@ -1,5 +1,6 @@
 package com.jsm.studymoa.service;
 
+import com.jsm.studymoa.config.exception.AccountCertifyNotFoundException;
 import com.jsm.studymoa.config.exception.AccountDuplicateException;
 import com.jsm.studymoa.domain.account.Account;
 import com.jsm.studymoa.domain.account.repository.AccountRepository;
@@ -11,6 +12,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @RequiredArgsConstructor
 @Service
 public class AccountService {
@@ -21,7 +24,7 @@ public class AccountService {
     private final BCryptPasswordEncoder encoder;
 
     @Transactional
-    public Long signUp(SignUpRequestDto signUpRequestDto) throws Exception{
+    public Long signUp(SignUpRequestDto signUpRequestDto) throws Exception {
         boolean existsByEmail = accountRepository.existsByEmail(signUpRequestDto.getEmail());
         if (existsByEmail) {
             throw new AccountDuplicateException("이미 존재하는 이메일 입니다.");
@@ -37,5 +40,18 @@ public class AccountService {
         accountCertifyRepository.save(new AccountCertify(account));
 
         return account.getId();
+    }
+
+    @Transactional
+    public Account confirmCertify(String code) {
+        AccountCertify accountCertify = accountCertifyRepository.findByCode(code, LocalDateTime.now()).orElseThrow(AccountCertifyNotFoundException::new);
+        accountCertify.used();
+
+        return accountCertify.getAccount();
+    }
+
+    @Transactional
+    public void completeSignup(Account account) {
+        account.completeSignup();
     }
 }

@@ -58,4 +58,8 @@ public class Account extends BaseTimeEntity {
         this.role = role;
         this.isLeave = isLeave;
     }
+
+    public void completeSignup() {
+        this.role = Role.USER;
+    }
 }

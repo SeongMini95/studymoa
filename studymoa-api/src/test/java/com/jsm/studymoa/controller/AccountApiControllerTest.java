@@ -2,12 +2,13 @@ package com.jsm.studymoa.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jsm.studymoa.domain.account.Account;
+import com.jsm.studymoa.domain.account.enums.Role;
 import com.jsm.studymoa.domain.account.repository.AccountRepository;
+import com.jsm.studymoa.domain.accountcertify.AccountCertify;
 import com.jsm.studymoa.domain.accountcertify.repository.AccountCertifyRepository;
 import com.jsm.studymoa.dto.account.request.SignUpRequestDto;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,17 +17,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -84,5 +85,51 @@ class AccountApiControllerTest {
         assertThat(account.getEmail()).isEqualTo(signUpRequestDto.getEmail());
         assertThat(encoder.matches(signUpRequestDto.getPwd(), account.getPwd())).isTrue();
         assertThat(account.getNickname()).isEqualTo(signUpRequestDto.getNickname());
+    }
+
+    @Test
+    @DisplayName("회원가입 후 이메일 인증")
+    void confirmCertify() throws Exception {
+        // given
+        Account mockAccount = accountRepository.save(Account.builder()
+                .email("email")
+                .pwd(encoder.encode("pwd"))
+                .nickname("nickname")
+                .role(Role.GUEST)
+                .isLeave(false)
+                .build());
+
+        AccountCertify mockAccountCertify = accountCertifyRepository.save(new AccountCertify(mockAccount));
+
+        // when
+        ResultActions actions = mvc.perform(get("/api/account/certify/signUp")
+                .param("code", mockAccountCertify.getCode()));
+
+        // then
+        actions
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("회원가입 후 이메일 인증 실패")
+    void failConfirmCertify() throws Exception {
+        // given
+        Account mockAccount = accountRepository.save(Account.builder()
+                .email("email")
+                .pwd(encoder.encode("pwd"))
+                .nickname("nickname")
+                .role(Role.GUEST)
+                .isLeave(false)
+                .build());
+
+        AccountCertify mockAccountCertify = accountCertifyRepository.save(new AccountCertify(mockAccount));
+
+        // when
+        ResultActions actions = mvc.perform(get("/api/account/certify/signUp")
+                .param("code", "fail"));
+
+        // then
+        actions
+                .andExpect(content().string(containsString("만료")));
     }
 }
