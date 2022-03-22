@@ -52,3 +52,9 @@ project(":studymoa-api") {
         api project(":studymoa-core")
     }
 }
+
+project(":studymoa-web") {
+    dependencies {
+        api project(":studymoa-core")
+    }
+}

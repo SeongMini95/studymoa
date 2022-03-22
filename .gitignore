@@ -15,3 +15,5 @@ out/
 !**/src/test/**/out/
 
 **/src/main/generated/
+
+application-db.yml

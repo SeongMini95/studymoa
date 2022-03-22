@@ -1,4 +1,5 @@
 rootProject.name = 'studymoa'
 include 'studymoa-core'
 include 'studymoa-api'
+include 'studymoa-web'
 

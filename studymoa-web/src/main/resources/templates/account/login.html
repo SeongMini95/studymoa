@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<form action="/account/login" method="post">
+  <input type="text" name="email" id="email">
+  <input type="password" name="password" id="password">
+  <input type="hidden" name="returnUrl" th:value="${param.returnUrl}">
+  <button type="submit">로그인</button>
+  <p th:text="${errorMessage}"></p>
+</form>
+</body>
+</html>
