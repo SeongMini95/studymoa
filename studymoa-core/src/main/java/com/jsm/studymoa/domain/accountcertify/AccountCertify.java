@@ -67,4 +67,8 @@ public class AccountCertify extends BaseTimeEntity {
 
         return DatatypeConverter.printHexBinary(md5.digest()) + DatatypeConverter.printHexBinary(sha512.digest());
     }
+
+    public void used() {
+        this.isUse = true;
+    }
 }
