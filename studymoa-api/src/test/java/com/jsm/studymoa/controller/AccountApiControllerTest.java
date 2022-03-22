@@ -6,6 +6,7 @@ import com.jsm.studymoa.domain.account.enums.Role;
 import com.jsm.studymoa.domain.account.repository.AccountRepository;
 import com.jsm.studymoa.domain.accountcertify.AccountCertify;
 import com.jsm.studymoa.domain.accountcertify.repository.AccountCertifyRepository;
+import com.jsm.studymoa.dto.account.request.FindPwdRequestDto;
 import com.jsm.studymoa.dto.account.request.SignUpRequestDto;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,8 +28,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 class AccountApiControllerTest {
@@ -131,5 +131,57 @@ class AccountApiControllerTest {
         // then
         actions
                 .andExpect(content().string(containsString("만료")));
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 이메일 인증")
+    void confirmCertifyFindPwd() throws Exception {
+        // given
+        Account mockAccount = accountRepository.save(Account.builder()
+                .email("email")
+                .pwd(encoder.encode("pwd"))
+                .nickname("nickname")
+                .role(Role.GUEST)
+                .isLeave(false)
+                .build());
+
+        AccountCertify mockAccountCertify = accountCertifyRepository.save(new AccountCertify(mockAccount));
+
+        // when
+        ResultActions actions = mvc.perform(get("/api/account/certify/findPwd")
+                .param("code", mockAccountCertify.getCode()));
+
+        // then
+        actions
+                .andExpect(status().isOk())
+                .andExpect(request().sessionAttribute("findPwdAccountId", mockAccount.getId()));
+    }
+
+    @Test
+    @DisplayName("비밀번호 찾기 이메일 인증 후 비밀번호 변경")
+    void findPwd() throws Exception {
+        // given
+        Account mockAccount = accountRepository.save(Account.builder()
+                .email("email")
+                .pwd(encoder.encode("pwd"))
+                .nickname("nickname")
+                .role(Role.GUEST)
+                .isLeave(false)
+                .build());
+
+        FindPwdRequestDto findPwdRequestDto = FindPwdRequestDto.builder()
+                .pwd("changePwd")
+                .build();
+
+        // when
+        mvc.perform(post("/api/account/findPwd")
+                .sessionAttr("findPwdAccountId", mockAccount.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(findPwdRequestDto)));
+
+        Account account = accountRepository.findAll().get(0);
+
+        // then
+        assertThat(encoder.matches("changePwd", account.getPwd())).isTrue();
     }
 }

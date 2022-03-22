@@ -1,10 +1,14 @@
 package com.jsm.studymoa.controller;
 
+import com.jsm.studymoa.config.exception.FindPwdAccountIdNotFoundException;
 import com.jsm.studymoa.domain.account.Account;
+import com.jsm.studymoa.dto.account.request.FindPwdRequestDto;
 import com.jsm.studymoa.dto.account.request.SignUpRequestDto;
 import com.jsm.studymoa.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpSession;
 
 @RequiredArgsConstructor
 @RestController
@@ -12,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class AccountApiController {
 
     private final AccountService accountService;
+    private final HttpSession httpSession;
 
     @PostMapping
     public void signUp(@RequestBody SignUpRequestDto signUpRequestDto) throws Exception {
@@ -26,6 +31,20 @@ public class AccountApiController {
 
         if (type.equals("signUp")) {
             accountService.completeSignup(account);
+        } else if (type.equals("findPwd")) {
+            httpSession.setAttribute("findPwdAccountId", account.getId());
         }
+    }
+
+    @PostMapping("/findPwd")
+    public void findPwd(@RequestBody FindPwdRequestDto findPwdRequestDto) {
+        Long accountId = (Long) httpSession.getAttribute("findPwdAccountId");
+        if (accountId == null) {
+            throw new FindPwdAccountIdNotFoundException();
+        }
+
+        accountService.findPwd(accountId, findPwdRequestDto);
+
+        httpSession.removeAttribute("findPwdAccountId");
     }
 }
